@@ -1,7 +1,10 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
-from app.models import db, User
+from app.models import db, User, Post
+from datetime import datetime
+from app.utils import haversine, eliminar_posts_viejos
+import uuid
 
 main = Blueprint('main', __name__)
 
@@ -12,7 +15,27 @@ def index():
 @main.route('/post')
 @login_required
 def post():
-    return render_template('post.html')
+    eliminar_posts_viejos()  
+    posts = Post.query.order_by(Post.timestamp.desc()).all()
+    return render_template('post.html', posts=posts)
+
+@main.route('/delete_post/<post_id>', methods=['POST'])
+@login_required
+def delete_post(post_id):
+    post = Post.query.filter_by(post_id=post_id).first()
+
+    if not post:
+        flash('Post no encontrado.', 'error')
+        return redirect(url_for('main.post'))
+
+    if post.user_id != current_user.user_id:
+        flash('No tienes permiso para eliminar este post.', 'error')
+        return redirect(url_for('main.post'))
+
+    db.session.delete(post)
+    db.session.commit()
+    # flash('Post eliminado correctamente.', 'success')
+    return redirect(url_for('main.post'))
 
 @main.route('/login', methods=['GET', 'POST'])
 def login():
@@ -76,4 +99,37 @@ def logout():
     flash('Has cerrado sesión.')
     return redirect(url_for('main.index'))
 
+@main.route('/create_post', methods=['POST'])
+@login_required
+def create_post():
+    text = request.form.get('text')
+    lat = request.form.get('lat')
+    lon = request.form.get('lon')
 
+    if not text or not lat or not lon:
+        flash('Faltan datos para crear el post.', 'error')
+        return redirect(url_for('main.post'))
+
+    # Convertir lat y lon a float
+    try:
+        lat = float(lat)
+        lon = float(lon)
+    except ValueError:
+        flash('Coordenadas inválidas.', 'error')
+        return redirect(url_for('main.post'))
+
+    new_post = Post(
+        post_id=str(uuid.uuid4()),
+        user_id=current_user.user_id,
+        name=current_user.username,
+        text=text,
+        lat=lat,
+        lon=lon,
+        timestamp=datetime.now(),
+        likes=0
+    )
+    db.session.add(new_post)
+    db.session.commit()
+
+    # flash('Post creado con éxito!', 'success')
+    return redirect(url_for('main.post'))

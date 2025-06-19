@@ -40,7 +40,11 @@
 
     <p>
       ¿Ya tienes cuenta?
-      <a href="{{ url_for('main.index') }}">Inicia sesión aquí</a>.
+      <!-- <a href="{{ url_for('main.index') }}">Inicia sesión aquí</a>. -->
     </p>
+
+    <form action="{{ url_for('main.index') }}" method="GET">
+      <button type="submit">Inicia sesión aquí</button>
+    </form>
   </body>
 </html>

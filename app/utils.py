@@ -1,5 +1,7 @@
 import math
 from math import radians, sin, cos, sqrt, atan2
+from datetime import datetime, timedelta
+from app.models import db, Post
 
 def haversine(lat1, lon1, lat2, lon2):
     """
@@ -20,3 +22,10 @@ def haversine(lat1, lon1, lat2, lon2):
 
     distancia = R * c
     return distancia
+
+def eliminar_posts_viejos():
+    limite_tiempo = datetime.now() - timedelta(hours=1)
+    posts_viejos = Post.query.filter(Post.timestamp < limite_tiempo).all()
+    for post in posts_viejos:
+        db.session.delete(post)
+    db.session.commit()

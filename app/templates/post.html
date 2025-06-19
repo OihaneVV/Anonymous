@@ -14,22 +14,67 @@
         <button type="submit">Cerrar sesión</button>
       </form>
     </nav>
+
     <h1>App Anónima</h1>
-    <h1>Bienvenido, {{ current_user.username }}</h1>
-    <form>
+    <h2>Bienvenido, {{ current_user.username }}</h2>
+
+    <!-- Formulario para crear post -->
+    <form action="{{ url_for('main.create_post') }}" method="POST">
       <textarea
-        id="text"
         name="text"
-        placeholder="Escribe algo (máx 250 caracteres)"
-        maxlength="250"
+        placeholder="Escribe tu post aquí..."
         required
       ></textarea>
-      <input type="hidden" id="lat" name="lat" />
-      <input type="hidden" id="lon" name="lon" />
-      <button type="submit">Publicar</button>
+      <input type="hidden" name="lat" id="lat" />
+      <input type="hidden" name="lon" id="lon" />
+      <button type="submit">Crear post</button>
     </form>
 
+    <h1>Todos los posts</h1>
+
+    {% if posts %} {% for post in posts %}
+    <div class="post">
+      <strong>{{ post.name }}</strong> ({{ post.timestamp.strftime('%Y-%m-%d
+      %H:%M') }})
+      <p>{{ post.text }}</p>
+
+      {% if post.user_id == current_user.user_id %}
+      <form
+        action="{{ url_for('main.delete_post', post_id=post.post_id) }}"
+        method="POST"
+        style="display: inline"
+      >
+        <button
+          type="submit"
+          onclick="return confirm('¿Seguro que quieres eliminar este post?')"
+        >
+          Eliminar
+        </button>
+      </form>
+      {% endif %}
+    </div>
     <hr />
+    {% endfor %} {% else %}
+    <p>No hay posts disponibles.</p>
+    {% endif %}
+
+    <hr />
+
+    <script>
+      // Obtener la ubicación actual y llenar los inputs lat y lon del formulario
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          function (position) {
+            document.getElementById("lat").value = position.coords.latitude;
+            document.getElementById("lon").value = position.coords.longitude;
+          },
+          function (error) {
+            alert("Error al obtener la ubicación: " + error.message);
+          }
+        );
+      } else {
+        alert("Geolocalización no soportada por tu navegador.");
+      }
+    </script>
   </body>
-  <script></script>
 </html>
