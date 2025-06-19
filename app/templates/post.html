@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='style.css') }}"
+    />
+    <title>App Anónima</title>
+  </head>
+  <body>
+    <nav>
+      <form action="{{ url_for('main.logout') }}" method="GET">
+        <button type="submit">Cerrar sesión</button>
+      </form>
+    </nav>
+    <h1>App Anónima</h1>
+    <h1>Bienvenido, {{ current_user.username }}</h1>
+    <form>
+      <textarea
+        id="text"
+        name="text"
+        placeholder="Escribe algo (máx 250 caracteres)"
+        maxlength="250"
+        required
+      ></textarea>
+      <input type="hidden" id="lat" name="lat" />
+      <input type="hidden" id="lon" name="lon" />
+      <button type="submit">Publicar</button>
+    </form>
+
+    <hr />
+  </body>
+  <script></script>
+</html>

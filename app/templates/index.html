@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='style.css') }}"
+    />
+    <title>Login - App Anónima</title>
+  </head>
+  <body>
+    <h1>Iniciar sesión - App Anónima</h1>
+
+    {% with messages = get_flashed_messages() %} {% if messages %}
+    <ul class="flash-messages">
+      {% for msg in messages %}
+      <li>{{ msg }}</li>
+      {% endfor %}
+    </ul>
+    {% endif %} {% endwith %}
+
+    <form action="{{ url_for('main.login') }}" method="POST">
+      <input type="text" name="username" placeholder="Tu nombre" required />
+      <input
+        type="password"
+        name="password"
+        placeholder="Contraseña"
+        required
+      />
+      <button type="submit">Entrar</button>
+    </form>
+    <hr />
+
+    <p>
+      ¿No tienes cuenta?
+    <form action="{{ url_for('main.register') }}" method="GET">
+      <button type="submit">Registrate</button>
+    </form>
+    </p>
+  </body>
+</html>

@@ -1,0 +1,65 @@
+@import url("https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap");
+
+body,
+a {
+  background-color: #000;
+  color: #00ff00;
+  font-family: "Share Tech Mono", monospace;
+  padding: 30px;
+  line-height: 1.6;
+  text-shadow: 0 0 5px #00ff00;
+}
+
+h1 {
+  font-size: 2.5em;
+  color: #00ff00;
+  margin-bottom: 20px;
+  text-shadow: 0 0 10px #00ff00, 0 0 20px #00ff00;
+  letter-spacing: 2px;
+}
+
+input,
+textarea,
+button {
+  background-color: #000;
+  color: #00ff00;
+  border: 1px solid #00ff00;
+  font-family: "Share Tech Mono", monospace;
+  margin-top: 10px;
+  padding: 10px;
+  width: 100%;
+  box-sizing: border-box;
+  text-shadow: 0 0 5px #00ff00;
+}
+
+button {
+  cursor: pointer;
+  transition: background 0.3s, color 0.3s, box-shadow 0.3s;
+}
+
+button:hover {
+  background-color: #00ff00;
+  color: #000;
+  box-shadow: 0 0 10px #00ff00;
+}
+
+.post {
+  background-color: #000;
+  border-left: 4px solid #00ff00;
+  padding: 15px;
+  margin-top: 15px;
+  border-radius: 5px;
+  box-shadow: 0 0 15px #00ff00;
+}
+
+strong {
+  color: #00ffff;
+  text-shadow: 0 0 5px #00ffff;
+}
+
+hr {
+  border: none;
+  border-top: 1px solid #00ff00;
+  margin: 30px 0;
+  box-shadow: 0 0 5px #00ff00;
+}
