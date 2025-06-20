@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from app.models import db, User, Post
-from datetime import datetime
+from datetime import datetime, timedelta
 from app.utils import haversine, eliminar_posts_viejos
 import uuid
 
@@ -17,7 +17,7 @@ def index():
 def post():
     eliminar_posts_viejos()  
     posts = Post.query.order_by(Post.timestamp.desc()).all()
-    return render_template('post.html', posts=posts)
+    return render_template('post.html', posts=posts, current_user_id=current_user.user_id)
 
 @main.route('/delete_post/<post_id>', methods=['POST'])
 @login_required
@@ -133,3 +133,49 @@ def create_post():
 
     # flash('Post creado con éxito!', 'success')
     return redirect(url_for('main.post'))
+@main.route('/get_posts_with_proximity', methods=['POST'])
+@login_required
+def get_posts_with_proximity():
+    data = request.get_json()
+    user_lat = data.get('lat')
+    user_lon = data.get('lon')
+
+    if user_lat is None or user_lon is None:
+        return {"error": "Se requiere lat y lon"}, 400
+
+    try:
+        user_lat = float(user_lat)
+        user_lon = float(user_lon)
+    except ValueError:
+        return {"error": "lat y lon deben ser números"}, 400
+
+    posts = Post.query.order_by(Post.timestamp.desc()).all()
+    now = datetime.utcnow()
+
+    # Eliminar posts viejos (más de 1 hora)
+    limite = now - timedelta(hours=1)
+    posts = [p for p in posts if p.timestamp > limite]
+
+    results = []
+
+    for post in posts:
+        dist = haversine(user_lat, user_lon, post.lat, post.lon)
+
+        if dist >= 10:
+            proximity = "Lejos"
+        elif 5 <= dist < 10:
+            proximity = "Cerca"
+        else:  # 0 <= dist < 5
+            proximity = "Muy cerca"
+
+        results.append({
+            "post_id": post.post_id,
+            "user_id": post.user_id,
+            "name": post.name,
+            "text": post.text,
+            "timestamp": post.timestamp.isoformat(),
+            "proximity": proximity,
+            "likes": post.likes
+        })
+
+    return {"posts": results}

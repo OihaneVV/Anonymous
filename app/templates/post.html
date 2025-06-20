@@ -30,7 +30,7 @@
       <button type="submit">Crear post</button>
     </form>
 
-    <h1>Todos los comentarios</h1>
+    <!-- <h1>Todos los comentarios</h1>
 
     {% if posts %} {% for post in posts %}
     <div class="post">
@@ -57,25 +57,117 @@
     <hr />
     {% endfor %} {% else %}
     <p>No hay posts disponibles.</p>
-    {% endif %}
+    {% endif %} -->
+    <h1>Comentarios cercanos</h1>
 
-    <hr />
+    <div id="posts-container">
+      {% for post in posts %}
+      <div class="post">
+        <strong>{{ post.name }}</strong> ({{ post.proximity if post.proximity
+        else '' }})<br />
+        {{ post.text }} {% if post.user_id == current_user_id %}
+        <form
+          action="{{ url_for('main.delete_post', post_id=post.post_id) }}"
+          method="POST"
+          style="display: inline"
+        >
+          <button
+            type="submit"
+            onclick="return confirm('¿Seguro que quieres eliminar este post?')"
+          >
+            Eliminar
+          </button>
+        </form>
+        {% endif %}
+      </div>
+      {% else %}
+      <p>No hay posts aún.</p>
+      {% endfor %}
+    </div>
 
     <script>
-      // Obtener la ubicación actual y llenar los inputs lat y lon del formulario
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          function (position) {
-            document.getElementById("lat").value = position.coords.latitude;
-            document.getElementById("lon").value = position.coords.longitude;
-          },
-          function (error) {
-            alert("Error al obtener la ubicación: " + error.message);
+      document.addEventListener("DOMContentLoaded", () => {
+        const currentUserId = "{{ current_user.user_id }}";
+
+        function getUserLocation() {
+          return new Promise((resolve, reject) => {
+            if (navigator.geolocation) {
+              navigator.geolocation.getCurrentPosition(resolve, reject);
+            } else {
+              reject(new Error("Tu navegador no soporta geolocalización."));
+            }
+          });
+        }
+
+        function setLocationToForm(position) {
+          const { latitude, longitude } = position.coords;
+          document.getElementById("lat").value = latitude;
+          document.getElementById("lon").value = longitude;
+        }
+
+        async function loadPosts() {
+          try {
+            const position = await getUserLocation();
+            const { latitude, longitude } = position.coords;
+
+            setLocationToForm(position);
+
+            const response = await fetch(
+              "{{ url_for('main.get_posts_with_proximity') }}",
+              {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ lat: latitude, lon: longitude }),
+              }
+            );
+
+            if (!response.ok)
+              throw new Error("No se pudo obtener los posts del servidor.");
+
+            const data = await response.json();
+            const container = document.getElementById("posts-container");
+            container.innerHTML = "";
+
+            if (!data.posts || data.posts.length === 0) {
+              container.innerHTML = "<p>No hay posts disponibles.</p>";
+              return;
+            }
+
+            data.posts.forEach((post) => {
+              const postDiv = document.createElement("div");
+              postDiv.className = "post";
+
+              const isOwner = post.user_id == currentUserId;
+
+              postDiv.innerHTML = `
+            <strong>${post.name}</strong> (${new Date(
+                post.timestamp
+              ).toLocaleString()})
+            ${!isOwner ? `<em> - ${post.proximity}</em>` : ""}
+            <p>${post.text}</p>
+            ${
+              isOwner
+                ? `<form action="/delete_post/${post.post_id}" method="POST" style="display:inline;">
+                    <button type="submit" onclick="return confirm('¿Seguro que quieres eliminar este post?')" class="btn-rojo">
+                      Eliminar
+                    </button>
+                  </form>`
+                : ""
+            }
+          `;
+
+              container.appendChild(postDiv);
+              container.appendChild(document.createElement("hr"));
+            });
+          } catch (error) {
+            alert("Error: " + error.message);
+            document.getElementById("posts-container").innerHTML =
+              "<p>No se pudieron cargar los posts.</p>";
           }
-        );
-      } else {
-        alert("Geolocalización no soportada por tu navegador.");
-      }
+        }
+
+        loadPosts();
+      });
     </script>
   </body>
 </html>
